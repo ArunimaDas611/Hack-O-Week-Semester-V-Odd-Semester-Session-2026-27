@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<head>
+    <meta charset ="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whiteboard Challenge</title>
+    <style>
+        .drag {
+            cursor: move;
+        }
+    </style>
+</head>
+
+<body style="background-color:grey">
+    <div style="justify-content: center; align-items: center; flex: auto;">
+        <div style=" text-align: center; background-color: white; box-shadow: lightgrey; border-radius: 20px; padding-top: 10px;">
+            <h2 style="font-size: 16px; font-family: Arial, Helvetica, sans-serif; align-items: center; margin-bottom: 8px;">Draw on the bottom part only</h2>
+            <div style="border-color: black; border-radius: 20px; margin-bottom: 8px; padding: 6px;">
+                <div style="justify-content: center; align-items: center; flex: auto; position: relative;">
+                    <canvas id="whiteboard" width="900" height="500"></canvas>
+                </div>
+            </div>
+            <div style="position: absolute; top: 10px; right: 10px; padding: 2px;">
+                    <button id="clearBtn" style="padding-top: 2px; padding-bottom: 2px; padding-left: 4px; padding-right: 4px; background-color: mediumblue; color: white; border-radius: 4px;">Clear</button>
+                    <button id="eraserBtn" style="margin-left: 2px; padding-top: 2px; padding-bottom: 2px; padding-left: 4px; padding-right: 4px; background-color: crimson; color: white; border-radius: 4px;">Eraser</button>
+                </div>
+            <div style="justify-content: center; align-items: center; flex: auto; padding-bottom: 4px;">
+                <button id="saveBtn" style="padding-top: 2px; padding-bottom: 2px; padding-left: 4px; padding-right: 4px; background-color: lightgreen; color: white; border-radius: 4px;">Save</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('whiteboard');
+        const context = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let shapes = [];
+        let drag = false;
+        let dragStartX, dragStartY;
+        let tool = 'pen';
+
+        function draw(e) {
+            if(!isDrawing) return;
+            const {offsetX, offsetY} = e;
+            context.lineWidth = 2;
+            context.strokeStyle = '#000';
+            context.fillStyle = '#000';
+            if(tool === 'pen') {
+                context.lineTo(offsetX, offsetY);
+                context.stroke();
+                lastX = offsetX;
+                lastY = offsetY;
+            }
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            if(tool !== 'pen') {
+                lastX = e.offsetX;
+                lastY = e.offsetY;
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if(tool === 'pen') {
+                draw(e);
+                sendDrawReq(e.offsetX, e.offsetY, true);
+            }
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            isDrawing = false;
+
+            drag = false;
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            shapes = [];
+        });
+
+        document.getElementById('eraserBtn').addEventListener('click', () => {
+            tool = 'eraser';
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if(tool === 'eraser' && isDrawing) {
+                const{offsetX, offsetY} = e;
+                context.clearRect(offsetX - 5, offsetY - 5, 10, 10);
+            }
+        });
+
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            const image = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = image;
+            link.download = 'whiteboard.png';
+            link.click();
+        });
+    </script>
+    <script src="/WBRest.js"></script>
+</body>
